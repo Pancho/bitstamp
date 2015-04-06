@@ -22,7 +22,7 @@ USER_TRANSACTION_ORDERING_ASC = 'asc'
 class Bitstamp(object):
 	def __init__(self, config_file_path=None, api_key=None, secret=None, customer_id=None):
 		'''
-		Constructor. You can instantiate this class with either file path or with all three values the would otherwise
+		Constructor. You can instantiate this class with either file path or with all three values that would otherwise
 		 be found in the config file.
 		:param config_file_path: path to the file with the config
 		:param api_key: API key found on https://www.bitstamp.net/account/security/api/
