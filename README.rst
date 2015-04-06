@@ -1,7 +1,7 @@
 Bistamp Python API
 ==================
 
-This is an official API library for accessing Bitstamp's REST API.
+This is an unofficial API library for accessing Bitstamp's REST API.
 
 Sample Usage
 ------------
