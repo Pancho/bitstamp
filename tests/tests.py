@@ -7,8 +7,6 @@ import os
 from bitstamp import bitstamp
 
 
-# One should not run this test suite too many times, as they still use regular API calls and can still
-# cause a ban for 15 minutes.
 class TestInstantiation(unittest.TestCase):
 	def setUp(self):
 		self.api_key = 'some api key'
@@ -183,6 +181,7 @@ class TestSignature(unittest.TestCase):
 	def test_signature(self):
 		nonce, signature = self.working_api._Bitstamp__get_signature()
 
+		# Construct the signature per instructions from the official API page
 		signature_raw = '{}{}{}'.format(nonce, self.customer_id, self.api_key)
 		new_signature = hmac.new(self.secret.encode('utf8'), msg=signature_raw.encode('utf8'), digestmod=hashlib.sha256).hexdigest().upper()
 
@@ -192,6 +191,8 @@ class TestSignature(unittest.TestCase):
 		pass
 
 
+# One should not run this test suite too many times, as they still use regular API calls and can still
+# cause a ban for 15 minutes.
 class TestUnsignedCalls(unittest.TestCase):
 	def setUp(self):
 		self.api_key = 'some api key'
@@ -262,7 +263,7 @@ class TestSignedValidatedCalls(unittest.TestCase):
 	performed before that happens and we should test for those. API exceptions will not break the runtime, but
 	validations in this API client will try to.
 
-	Methods that are validates are:
+	Methods that are validated are:
 	* buy_limit_order
 	* sell_limit_order
 	* user_transactions
