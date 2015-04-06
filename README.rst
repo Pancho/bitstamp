@@ -8,6 +8,10 @@ Sample Usage
 
 Usage
 
+Since the project lives only on GitHub, you can install it with::
+
+	pip install git+git://github.com/Pancho/bitstamp.git
+
 In the root folder of this package you can find the file example.py which contains two
 examples.
 
