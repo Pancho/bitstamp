@@ -3,6 +3,8 @@ Bistamp Python API
 
 This is an unofficial API library for accessing Bitstamp's REST API.
 
+This version requires Python3.
+
 Sample Usage
 ------------
 
