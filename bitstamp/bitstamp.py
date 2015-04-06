@@ -10,7 +10,7 @@ import websocket
 import requests
 
 
-EXAMPLES_URL = 'URL-to-config-examples-on-github'
+EXAMPLES_URL = 'https://github.com/Pancho/bitstamp'
 BITSTAMP_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 WS_CHANNEL_LIVE_TRADES = 'live-trades'
 WS_CHANNEL_ORDER_BOOK = 'order-book'
