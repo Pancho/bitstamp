@@ -17,6 +17,7 @@ examples.
 
 * First example shows how to instantiate the class (with python file format for config)
 and how to call the ticker method.
+
 * The second shows how to instantiate the class (with python file format for config) and
 how to attach to a web socket
 
