@@ -383,7 +383,7 @@ class Bitstamp(object):
 
 	def withdrawal_requests(self):
 		'''
-		This method will call withdrawal_requests cancel_order and return the result.
+		This method will call withdrawal_requests and return the result.
 		This is a resource that requires signature.
 		:return: a list of dictionaries, each representing one withdrawal request
 		'''
@@ -401,7 +401,7 @@ class Bitstamp(object):
 
 	def bitcoin_withdrawal(self, amount, address):
 		'''
-		This method will call bitcoin_withdrawal cancel_order and return the result.
+		This method will call bitcoin_withdrawal and return the result.
 		This is a resource that requires signature.
 		:param amount: a positive number, BTC amount for withdrawal
 		:param address: a wallet address, a string that's longer than 25 characters and shorter than 35 characters
@@ -429,7 +429,7 @@ class Bitstamp(object):
 
 	def unconfirmed_bitcoin_deposits(self):
 		'''
-		This method will call bitcoin_withdrawal cancel_order and return the result.
+		This method will call bitcoin_withdrawal and return the result.
 		This is a resource that requires signature.
 		:return:a list of pending BTC deposits to your wallet
 		'''
@@ -447,7 +447,7 @@ class Bitstamp(object):
 
 	def wallet_address(self):
 		'''
-		This method will call bitcoin_withdrawal cancel_order and return the result.
+		This method will call bitcoin_withdrawal and return the result.
 		This is a resource that requires signature.
 		:return: a string representing your wallet address
 		'''
