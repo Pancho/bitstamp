@@ -372,6 +372,7 @@ class TestWebSocketsOrderBookDiff(unittest.TestCase):
 			expected_keys = sorted([
 				'asks',
 				'bids',
+				'timestamp',
 			])
 			keys = sorted(list(message.keys()))
 			self.assertEqual(keys, expected_keys, msg='Expected keys don\'t match with the received ones')
