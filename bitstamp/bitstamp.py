@@ -273,6 +273,25 @@ class Bitstamp(object):
 
 		return json.loads(response.text)
 
+	def order_status(self, order_id):
+		'''
+		This method will call order_status resource and return the result.
+		This is a resource that requires signature.
+		:return: a dictionary that represent order current status and the transactions that have acted upon it
+		'''
+		resource = 'order_status/'
+
+		nonce, signature = self.__get_signature()
+
+		response = requests.post('{}{}'.format(self.api_endpoint, resource), data={
+			'key': self.api_key,
+			'nonce': nonce,
+			'signature': signature,
+			'id': order_id,
+		})
+
+		return json.loads(response.text)
+
 	def buy_limit_order(self, amount, price, limit_price=None):
 		'''
 		This method will call buy resource and return the result.
