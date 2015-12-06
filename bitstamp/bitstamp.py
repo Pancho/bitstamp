@@ -20,7 +20,7 @@ USER_TRANSACTION_ORDERING_ASC = 'asc'
 
 
 class Bitstamp(object):
-	def __init__(self, config_file_path=None, api_key=None, secret=None, customer_id=None):
+	def __init__(self, config_file_path=None, api_key=None, secret=None, customer_id=None, api_endpoint=None):
 		'''
 		Constructor. You can instantiate this class with either file path or with all three values that would otherwise
 		 be found in the config file.
@@ -45,7 +45,10 @@ class Bitstamp(object):
 		if self.api_key is None or self.api_key.strip() == '' or self.secret is None or self.secret.strip() == '' or self.customer_id is None or self.customer_id.strip() == '':
 			raise Exception('No credentials were found')
 
-		self.api_endpoint = 'https://www.bitstamp.net/api/'
+		if api_endpoint is None:
+			self.api_endpoint = 'https://www.bitstamp.net/api/'
+		else:
+			self.api_endpoint = api_endpoint
 		# Why didn't I use the pushed API?
 		# 1. I wanted this client lib to be Python3 compatible - Pusher doesn't support that (clearly) yet
 		# 2. Don't want all the ballast that comes along (a whole lib for three channels and supporting libs)
