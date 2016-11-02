@@ -5,10 +5,8 @@ import hmac
 import hashlib
 import time
 
-
 import websocket
 import requests
-
 
 EXAMPLES_URL = 'https://github.com/Pancho/bitstamp'
 BITSTAMP_DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -17,6 +15,14 @@ WS_CHANNEL_ORDER_BOOK = 'order-book'
 WS_CHANNEL_ORDER_BOOK_DIFF = 'diff-order-book'
 USER_TRANSACTION_ORDERING_DESC = 'desc'
 USER_TRANSACTION_ORDERING_ASC = 'asc'
+BTC_USD = 'btcusd'
+BTC_EUR = 'btceur'
+EUR_USD = 'eurusd'
+ALL_PAIRS = [
+	BTC_USD,
+	BTC_EUR,
+	BTC_EUR,
+]
 
 
 class Bitstamp(object):
@@ -32,7 +38,8 @@ class Bitstamp(object):
 		'''
 		# None of the parameters are necessary, but to work properly, we need at least one pair from one source
 		if config_file_path is None and (api_key is None or secret is None or customer_id is None):
-			raise Exception('You need to pass either config_file_path parameter or all of api_key, secret and customer_id')
+			raise Exception(
+				'You need to pass either config_file_path parameter or all of api_key, secret and customer_id')
 
 		if config_file_path is not None:
 			self.api_key, self.secret, self.customer_id = self.__get_credentials(config_file_path)
@@ -53,7 +60,8 @@ class Bitstamp(object):
 		# 1. I wanted this client lib to be Python3 compatible - Pusher doesn't support that (clearly) yet
 		# 2. Don't want all the ballast that comes along (a whole lib for three channels and supporting libs)
 		self.websockets_endpoint = 'ws://ws.pusherapp.com/app/de504dc5763aeef9ff52?protocol=7'
-		self.ws_channels = {  # Pusher wants JSON objects stringified (which is kind of weird, but due to it's generic nature it might make some sense)
+		self.ws_channels = {
+			# Pusher wants JSON objects stringified (which is kind of weird, but due to it's generic nature it might make some sense)
 			WS_CHANNEL_LIVE_TRADES: '{"event":"pusher:subscribe","data":{"channel":"live_trades"}}',
 			WS_CHANNEL_ORDER_BOOK: '{"event":"pusher:subscribe","data":{"channel":"order_book"}}',
 			WS_CHANNEL_ORDER_BOOK_DIFF: '{"event":"pusher:subscribe","data":{"channel":"diff_order_book"}}',
@@ -123,7 +131,9 @@ class Bitstamp(object):
 			pass
 
 		if api_key is None or secret is None:
-			raise Exception('While the config file was found, it was not configured correctly. Check for examples here: {}'.format(EXAMPLES_URL))
+			raise Exception(
+				'While the config file was found, it was not configured correctly. Check for examples here: {}'.format(
+					EXAMPLES_URL))
 
 		return api_key, secret, customer_id
 
@@ -135,7 +145,8 @@ class Bitstamp(object):
 		'''
 		nonce = str(int(time.time() * 1000))
 		signature_raw = '{}{}{}'.format(nonce, self.customer_id, self.api_key)
-		return nonce, hmac.new(self.secret.encode('utf8'), msg=signature_raw.encode('utf8'), digestmod=hashlib.sha256).hexdigest().upper()
+		return nonce, hmac.new(self.secret.encode('utf8'), msg=signature_raw.encode('utf8'),
+		                       digestmod=hashlib.sha256).hexdigest().upper()
 
 	@staticmethod
 	def __parse_ticker(blob):
@@ -144,19 +155,21 @@ class Bitstamp(object):
 		blob['ask'] = float(blob.get('ask'))
 		blob['last'] = float(blob.get('last'))
 		blob['low'] = float(blob.get('low'))
+		blob['open'] = float(blob.get('open'))
 		blob['bid'] = float(blob.get('bid'))
 		blob['volume'] = float(blob.get('volume'))
 		blob['vwap'] = float(blob.get('vwap'))
 
 		return blob
 
-	def ticker(self, parsed=False):
+	def ticker(self, currency=BTC_USD, parsed=False):
 		'''
 		This method will call ticker resource and return the result.
+		:param currency: one of the currency pairs
 		:param parsed: if True, blob will be parsed
 		:return: ticker blob (dict)
 		'''
-		resource = 'ticker/'
+		resource = 'v2/ticker/{}/'.format(currency)
 
 		response = requests.get('{}{}'.format(self.api_endpoint, resource))
 
@@ -165,24 +178,26 @@ class Bitstamp(object):
 		else:
 			return json.loads(response.text)
 
-	def order_book(self):
+	def order_book(self, currency=BTC_USD):
 		'''
 		This method will call order_book resource and return the result.
+		:param currency: one of the currency pairs
 		:return: order book blob (dict)
 		'''
-		resource = 'order_book/'
+		resource = 'v2/order_book/{}/'.format(currency)
 
 		response = requests.get('{}{}'.format(self.api_endpoint, resource))
 
 		return json.loads(response.text)
 
-	def transactions(self, timespan='hour'):
+	def transactions(self, currency=BTC_USD, timespan='hour'):
 		'''
 		This method will call transactions resource and return the result.
+		:param currency: one of the currency pairs
 		:param timespan: minute/hour string
 		:return: list of transactions made in the past minute/hour
 		'''
-		resource = 'transactions/'
+		resource = 'v2/transactions/{}/'.format(currency)
 
 		if timespan != 'hour' and timespan != 'minute':
 			raise Exception('Parameter time can be only "hour" or "minute". Default is "hour"')
@@ -204,13 +219,17 @@ class Bitstamp(object):
 
 		return json.loads(response.text)
 
-	def balance(self):
+	def balance(self, currency=None):
 		'''
 		This method will call balance resource and return the result.
 		This is a resource that requires signature.
+		:param currency: one of the currency pairs
 		:return: a dict containing all the info about user account balance, BTC included
 		'''
-		resource = 'balance/'
+		if currency is not None:  # This is the case when user want all of their balances
+			resource = 'v2/balance/'
+		else:
+			resource = 'v2/balance/{}/'.format(currency)
 
 		nonce, signature = self.__get_signature()
 
@@ -222,16 +241,20 @@ class Bitstamp(object):
 
 		return json.loads(response.text)
 
-	def user_transactions(self, offset=0, limit=100, sort='desc'):
+	def user_transactions(self, currency=None, offset=0, limit=100, sort='desc'):
 		'''
 		This method will call user_transactions resource and return the result.
 		This is a resource that requires signature.
+		:param currency: one of the currency pairs
 		:param offset: offset, useful for pagination, that has to be positive number
 		:param limit: limit of how many transactions you will receive, in range (0, 1000]
 		:param sort: one of the values: 'desc' or 'asc'
 		:return: a list of user's transactions
 		'''
-		resource = 'user_transactions/'
+		if currency is not None:  # This is the case when user want all of their transactions
+			resource = 'v2/user_transactions/'
+		else:
+			resource = 'v2/user_transactions/{}/'.format(currency)
 
 		if offset < 0:
 			raise Exception('Offset has to be a positive number')
@@ -240,7 +263,8 @@ class Bitstamp(object):
 			raise Exception('Limit has to be a number from range [1, 1000]')
 
 		if sort is not USER_TRANSACTION_ORDERING_ASC and sort is not USER_TRANSACTION_ORDERING_DESC:
-			raise Exception('Sort parameter has to be one of {} or {}'.format(USER_TRANSACTION_ORDERING_DESC, USER_TRANSACTION_ORDERING_ASC))
+			raise Exception('Sort parameter has to be one of {} or {}'.format(USER_TRANSACTION_ORDERING_DESC,
+			                                                                  USER_TRANSACTION_ORDERING_ASC))
 
 		nonce, signature = self.__get_signature()
 
@@ -255,13 +279,17 @@ class Bitstamp(object):
 
 		return json.loads(response.text)
 
-	def open_orders(self):
+	def open_orders(self, currency=None):
 		'''
 		This method will call open_orders resource and return the result.
 		This is a resource that requires signature.
+		:param currency: one of the currency pairs
 		:return: a list of dictionaries that represent orders that haven't been closed yet
 		'''
-		resource = 'open_orders/'
+		if currency is not None:  # This is the case when user want all of their transactions
+			resource = 'v2/open_orders/'
+		else:
+			resource = 'v2/open_orders/{}/'.format(currency)
 
 		nonce, signature = self.__get_signature()
 
@@ -292,17 +320,18 @@ class Bitstamp(object):
 
 		return json.loads(response.text)
 
-	def buy_limit_order(self, amount, price, limit_price=None):
+	def buy_limit_order(self, amount, price, currency=BTC_USD, limit_price=None):
 		'''
 		This method will call buy resource and return the result.
 		This is a resource that requires signature.
 		This method will throw exception if amount * price yields a float that's less than 5
 		:param amount: a float, the will be rounded to 8 decimal places, has to be positive
 		:param price:  a float that will be rounded to 2 decimal places, has to be positive
+		:param currency: one of the currency pairs
 		:param limit_price: a float that will be rounded to 2 decimal places, has to be positive
 		:return: a boolean value, True if the order has been successfully opened, False if it failed
 		'''
-		resource = 'buy/'
+		resource = 'v2/buy/{}/'.format(currency)
 
 		if amount < 0:
 			raise Exception('Amount has to be a positive float')
@@ -336,17 +365,18 @@ class Bitstamp(object):
 
 		return json.loads(response.text)
 
-	def sell_limit_order(self, amount, price, limit_price=None):
+	def sell_limit_order(self, amount, price, currency=BTC_USD, limit_price=None):
 		'''
 		This method will call sell resource and return the result.
 		This is a resource that requires signature.
 		This method will throw exception if amount * price yields a float that's less than 5
 		:param amount: a float, the will be rounded to 8 decimal places, has to be positive
 		:param price:  a float that will be rounded to 2 decimal places, has to be positive
+		:param currency: one of the currency pairs
 		:param limit_price: a float that will be rounded to 2 decimal places, has to be positive
 		:return: a boolean value, True if the order has been successfully opened, False if it failed
 		'''
-		resource = 'sell/'
+		resource = 'v2/sell/{}/'.format(currency)
 
 		if amount < 0:
 			raise Exception('Amount has to be a positive float')
@@ -487,6 +517,7 @@ class Bitstamp(object):
 
 	def __on_open(self, channel):
 		channel_string = self.ws_channels[channel]
+
 		def open_channel(internal_ws):
 			return internal_ws.send(channel_string)
 
@@ -514,7 +545,8 @@ class Bitstamp(object):
 		if close_callback is None:
 			close_callback = self.__generic_close_callback
 
-		self.ws = websocket.WebSocketApp(self.websockets_endpoint,
+		self.ws = websocket.WebSocketApp(
+			self.websockets_endpoint,
 			on_message=self.__data_message_closure(callback),
 			on_error=error_callback,
 			on_close=close_callback
@@ -549,4 +581,3 @@ class Bitstamp(object):
 		:return: datetime object parsed from the passed string
 		'''
 		return datetime.strptime(string, BITSTAMP_DATETIME_FORMAT)
-
